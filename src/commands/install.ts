@@ -64,12 +64,23 @@ export async function installFramework(): Promise<void> {
 
         vscode.window
           .showInformationMessage(
-            'RoundTable Framework installed successfully! Set up your project now?',
-            'Setup Project',
-            'Later'
+            'RoundTable Framework installed successfully!',
+            'Getting Started',
+            'Getting Started (ภาษาไทย)',
+            'Setup Project'
           )
           .then((choice) => {
-            if (choice === 'Setup Project') {
+            if (choice === 'Getting Started') {
+              const guideUri = vscode.Uri.file(
+                path.join(workspaceRoot, '.claude', 'GETTING_STARTED.md')
+              );
+              vscode.commands.executeCommand('markdown.showPreview', guideUri);
+            } else if (choice === 'Getting Started (ภาษาไทย)') {
+              const guideUri = vscode.Uri.file(
+                path.join(workspaceRoot, '.claude', 'GETTING_STARTED_TH.md')
+              );
+              vscode.commands.executeCommand('markdown.showPreview', guideUri);
+            } else if (choice === 'Setup Project') {
               vscode.commands.executeCommand('roundtable.setup');
             }
           });

@@ -2,6 +2,23 @@
 
 All notable changes to the RoundTable Hub extension will be documented in this file.
 
+## [0.1.1] - 2026-03-12
+
+### Added
+- Post-install welcome dialog with "Getting Started" guide options (English / Thai)
+- GETTING_STARTED.md and GETTING_STARTED_TH.md included in framework template
+- Gallery banner for VS Code Marketplace listing
+- Machine Learning category for better discoverability
+- Version, installs, and license badges in README
+- Commands reference table in README
+- Known Issues and Contributing sections in README
+- CHANGELOG.md for version history
+
+### Changed
+- Post-install dialog now offers Getting Started guide instead of just Setup Project
+
+---
+
 ## [0.1.0] - 2026-03-12
 
 ### Added
