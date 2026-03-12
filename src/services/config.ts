@@ -24,4 +24,4 @@ export function isProUser(): boolean {
          /^RT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(key.trim());
 }
 
-export const PURCHASE_URL = 'https://unicorntech.lemonsqueezy.com/buy/roundtable-hub-pro';
+export const PURCHASE_URL = 'https://unicorntech.lemonsqueezy.com/checkout/buy/06250cd4-2a4b-48fd-9e9a-5621881e5242';
