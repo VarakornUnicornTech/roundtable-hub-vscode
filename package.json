@@ -2,7 +2,7 @@
   "name": "roundtable-hub",
   "displayName": "RoundTable Hub",
   "description": "Management hub for RoundTable Framework — one-click install, visual setup, version management",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "UnicornTech",
   "license": "MIT",
   "icon": "media/logo3_square.png",

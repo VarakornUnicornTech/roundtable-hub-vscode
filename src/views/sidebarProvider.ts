@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { TemplateService } from '../services/template';
-import { isProUser, PURCHASE_URL } from '../services/config';
+import { isProUser, PURCHASE_URL, getLicenseKey } from '../services/config';
+import { isTrialActive, getTrialDaysRemaining } from '../services/trial';
 import { scanRoundTableLogs, getLogStats, getExtendedStats, type RoundTableFile, type SessionStats } from '../services/sessionLog';
 import { parseProjectEnvironment, writeProjectEnvironment } from '../services/projectEnv';
 import { runHealthCheck, getHealthSummary, type HealthResult } from '../services/healthCheck';
@@ -164,13 +165,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       }
     }
 
-    const isPro = isProUser();
+    const hasLicense = isProUser();
+    const trialActive = isTrialActive();
+    const isPro = hasLicense || trialActive;
+    const trialDays = trialActive ? getTrialDaysRemaining() : 0;
+    // proSource: 'license' | 'trial' | 'none'
+    const proSource = hasLicense ? 'license' : trialActive ? 'trial' : 'none';
 
     const logoUri = this._view.webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'media', 'logo3_square.png')
     );
 
-    this._view.webview.html = this.getHtml(installed, version, fileCount, isPro, logoUri, logFiles, projects, healthResults, policies, rosters, extStats);
+    this._view.webview.html = this.getHtml(installed, version, fileCount, isPro, logoUri, logFiles, projects, healthResults, policies, rosters, extStats, proSource, trialDays);
   }
 
   private getHtml(
@@ -184,7 +190,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     healthResults: HealthResult[] = [],
     policies: PolicyFile[] = [],
     rosters: TeamRoster[] = [],
-    extStats: SessionStats | null = null
+    extStats: SessionStats | null = null,
+    proSource: string = 'none',
+    trialDays: number = 0
   ): string {
     const icons = this.getIcons();
 
@@ -254,7 +262,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         <h1 class="title">RoundTable Hub</h1>
         <span class="subtitle">by Unicorn Tech Int Co.,Ltd.</span>
       </div>
-      <span class="badge ${isPro ? 'badge-pro' : 'badge-free'}">${isPro ? 'PRO' : 'FREE'}</span>
+      <span class="badge ${proSource === 'license' ? 'badge-pro' : proSource === 'trial' ? 'badge-trial' : 'badge-free'}">${proSource === 'license' ? 'PRO' : proSource === 'trial' ? 'TRIAL' : 'FREE'}</span>
     </div>
 
     <div class="divider"></div>
@@ -277,6 +285,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         <span class="status-value status-installed">Installed</span>
       </div>
     </div>
+
+    ${proSource === 'trial' ? `
+    <div class="card card-trial">
+      <div class="trial-header">
+        <span class="trial-icon">${icons.star}</span>
+        <span class="trial-title">Free Trial Active</span>
+      </div>
+      <p class="trial-text">All Pro features are unlocked for <strong>${trialDays} day${trialDays !== 1 ? 's' : ''}</strong> remaining. Enjoy!</p>
+      <div class="trial-actions">
+        <button class="btn-link" onclick="send('enterKey')">Enter License Key</button>
+        <button class="btn-link" onclick="send('upgrade')">Buy Pro</button>
+      </div>
+    </div>
+    ` : ''}
 
     <div class="divider"></div>
 
@@ -413,6 +435,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       </ul>
       <button class="btn btn-upgrade" onclick="send('upgrade')">
         <span>Upgrade Now</span>
+      </button>
+      <button class="btn-link" style="margin-top:8px;justify-content:center;width:100%;" onclick="send('enterKey')">
+        Already have a license key?
       </button>
     </div>
 
@@ -919,6 +944,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       .badge-pro {
         background: #f0b429;
         color: #1a1a1a;
+      }
+
+      .badge-trial {
+        background: #4caf50;
+        color: #ffffff;
       }
 
       .badge-free {
@@ -1698,6 +1728,47 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         color: var(--vscode-badge-foreground, var(--vscode-foreground));
         padding: 2px 6px;
         border-radius: 4px;
+      }
+
+      /* ===== Trial Card ===== */
+      .card-trial {
+        background: linear-gradient(135deg, var(--vscode-editor-background, rgba(255,255,255,0.04)), rgba(76, 175, 80, 0.08));
+        border-color: rgba(76, 175, 80, 0.25);
+      }
+
+      .trial-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+
+      .trial-icon svg {
+        width: 14px;
+        height: 14px;
+        color: #4caf50;
+      }
+
+      .trial-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #4caf50;
+      }
+
+      .trial-text {
+        font-size: 12px;
+        opacity: 0.8;
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+
+      .trial-text strong {
+        color: #4caf50;
+      }
+
+      .trial-actions {
+        display: flex;
+        gap: 8px;
       }
 
       /* ===== Utility ===== */

@@ -89,6 +89,10 @@ Activate Pro features with a license key from our store. Supports online validat
 | Team Roster Viewer | - | Yes |
 | Session Statistics | - | Yes |
 
+## Free Trial
+
+**All Pro features are free for 60 days** — no license key required. Install the extension and start using every feature immediately. When the trial ends, free-tier features remain available and you can upgrade to Pro to keep the full experience.
+
 ## Get Pro
 
 Upgrade to Pro to unlock the full power of RoundTable Hub — Update Manager, Session Logs, Policy Browser, Team Roster Viewer, Health Check, Statistics, and more.

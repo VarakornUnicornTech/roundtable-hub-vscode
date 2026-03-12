@@ -6,9 +6,13 @@ import { checkForUpdates } from './commands/versionCheck';
 import { updateFramework } from './commands/update';
 import { isAutoCheckEnabled } from './services/config';
 import { validateLicense, clearLicenseCache } from './services/license';
+import { initTrial } from './services/trial';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('RoundTable Hub activated');
+
+  // Initialize 60-day free trial
+  initTrial(context);
 
   // Register sidebar
   const sidebarProvider = new SidebarProvider(context.extensionUri);

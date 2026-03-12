@@ -2,6 +2,20 @@
 
 All notable changes to the RoundTable Hub extension will be documented in this file.
 
+## [1.2.1] - 2026-03-12
+
+### Added
+- **60-Day Free Trial** — All Pro features automatically unlocked for 60 days on first install, no license key required
+- **Trial status banner** — Shows remaining trial days with quick links to enter key or purchase
+- **"Already have a license key?"** link in Upgrade card — direct access to license settings
+- **TRIAL badge** in sidebar header during active trial period
+
+### Changed
+- Pro unlock logic now checks both license key AND trial status
+- Trial start date persisted via VS Code globalState (survives reinstalls on same machine)
+
+---
+
 ## [1.2.0] - 2026-03-12
 
 ### Added
