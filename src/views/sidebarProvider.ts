@@ -3,6 +3,9 @@ import * as path from 'path';
 import { TemplateService } from '../services/template';
 import { isProUser, PURCHASE_URL } from '../services/config';
 import { scanRoundTableLogs, getLogStats, type RoundTableFile } from '../services/sessionLog';
+import { parseProjectEnvironment, writeProjectEnvironment } from '../services/projectEnv';
+import { runHealthCheck, getHealthSummary, type HealthResult } from '../services/healthCheck';
+import type { ProjectConfig } from '../services/template';
 
 function getExtensionVersion(): string {
   const ext = vscode.extensions.getExtension('UnicornTech.roundtable-hub');
@@ -55,6 +58,65 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         case 'enterKey':
           vscode.commands.executeCommand('workbench.action.openSettings', 'roundtable.licenseKey');
           break;
+        case 'saveProject': {
+          const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (root && message.project) {
+            const projects = parseProjectEnvironment(root);
+            const idx = projects.findIndex((p) => p.name === message.originalName);
+            const proj: ProjectConfig = {
+              name: message.project.name,
+              mode: message.project.mode,
+              projectRoot: message.project.projectRoot,
+              sourceRoot: message.project.sourceRoot,
+              active: message.project.active,
+              notes: message.project.notes,
+            };
+            if (idx >= 0) { projects[idx] = proj; } else { projects.push(proj); }
+            writeProjectEnvironment(root, projects);
+            vscode.window.showInformationMessage(`Project "${proj.name}" saved.`);
+            this.updateContent();
+          }
+          break;
+        }
+        case 'deleteProject': {
+          const root2 = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (root2 && message.name) {
+            const projects = parseProjectEnvironment(root2).filter((p) => p.name !== message.name);
+            writeProjectEnvironment(root2, projects);
+            vscode.window.showInformationMessage(`Project "${message.name}" removed.`);
+            this.updateContent();
+          }
+          break;
+        }
+        case 'openProjectEnv': {
+          const root3 = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (root3) {
+            const envPath = require('path').join(root3, '.claude', 'ProjectEnvironment.md');
+            const doc = vscode.workspace.openTextDocument(envPath);
+            doc.then((d: vscode.TextDocument) => vscode.window.showTextDocument(d));
+          }
+          break;
+        }
+        case 'openSession': {
+          const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (wsRoot) {
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            const dateStr = `${dd}-${mm}-${yyyy}`;
+            const rtDir = path.join(wsRoot, 'RoundTable');
+            const filePath = path.join(rtDir, `${dateStr}_RoundTable.md`);
+            const fs = require('fs');
+            if (!fs.existsSync(rtDir)) { fs.mkdirSync(rtDir, { recursive: true }); }
+            if (!fs.existsSync(filePath)) {
+              fs.writeFileSync(filePath, `# RoundTable — ${dateStr}\n\n---\n\n`, 'utf-8');
+            }
+            const doc = vscode.workspace.openTextDocument(filePath);
+            doc.then((d: vscode.TextDocument) => vscode.window.showTextDocument(d));
+          }
+          break;
+        }
         case 'refresh':
           this.updateContent();
           break;
@@ -72,6 +134,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     let version = 'unknown';
     let fileCount = 0;
     let logFiles: RoundTableFile[] = [];
+    let projects: ProjectConfig[] = [];
+    let healthResults: HealthResult[] = [];
 
     if (workspaceRoot) {
       const template = new TemplateService(workspaceRoot);
@@ -80,6 +144,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       fileCount = installed ? template.getInstalledFiles().length : 0;
       if (installed) {
         logFiles = scanRoundTableLogs(workspaceRoot);
+        projects = parseProjectEnvironment(workspaceRoot);
+        healthResults = runHealthCheck(workspaceRoot);
       }
     }
 
@@ -89,7 +155,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this._extensionUri, 'media', 'logo3_square.png')
     );
 
-    this._view.webview.html = this.getHtml(installed, version, fileCount, isPro, logoUri, logFiles);
+    this._view.webview.html = this.getHtml(installed, version, fileCount, isPro, logoUri, logFiles, projects, healthResults);
   }
 
   private getHtml(
@@ -98,7 +164,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     fileCount: number,
     isPro: boolean,
     logoUri: vscode.Uri,
-    logFiles: RoundTableFile[] = []
+    logFiles: RoundTableFile[] = [],
+    projects: ProjectConfig[] = [],
+    healthResults: HealthResult[] = []
   ): string {
     const icons = this.getIcons();
 
@@ -198,6 +266,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <div class="section">
       <h2 class="section-title">Quick Actions</h2>
       <div class="actions-grid">
+        <button class="btn btn-secondary" onclick="send('openSession')">
+          ${icons.file}
+          <span>Open Today's Session</span>
+        </button>
         <button class="btn btn-secondary" onclick="send('setup')">
           ${icons.gear}
           <span>Setup Project</span>
@@ -230,6 +302,34 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         <span class="pro-lock">PRO</span>
       </div>
       <p class="locked-description">View and browse your RoundTable session history directly from the sidebar.</p>
+      <button class="btn btn-small" onclick="send('upgrade')">Unlock with Pro</button>
+    </div>
+    `}
+
+    <div class="divider"></div>
+
+    <!-- Project Environment Editor -->
+    ${isPro ? this.getProjectEditorHtml(projects) : `
+    <div class="card card-locked">
+      <div class="card-header">
+        <span class="card-title">Project Editor</span>
+        <span class="pro-lock">PRO</span>
+      </div>
+      <p class="locked-description">Edit your ProjectEnvironment.md visually — add, modify, or deactivate projects without touching markdown.</p>
+      <button class="btn btn-small" onclick="send('upgrade')">Unlock with Pro</button>
+    </div>
+    `}
+
+    <div class="divider"></div>
+
+    <!-- Health Check -->
+    ${isPro ? this.getHealthCheckHtml(healthResults) : `
+    <div class="card card-locked">
+      <div class="card-header">
+        <span class="card-title">Health Check</span>
+        <span class="pro-lock">PRO</span>
+      </div>
+      <p class="locked-description">Verify your framework integrity — check that all policies, rosters, and core files are present.</p>
       <button class="btn btn-small" onclick="send('upgrade')">Unlock with Pro</button>
     </div>
     `}
@@ -269,6 +369,39 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 <script>
   const vscode = acquireVsCodeApi();
   function send(cmd, data) { vscode.postMessage({ command: cmd, path: data }); }
+  function getFormData(prefix) {
+    return {
+      name: document.getElementById(prefix + '-name')?.value || '',
+      mode: document.getElementById(prefix + '-mode')?.value || 'Centralized',
+      projectRoot: document.getElementById(prefix + '-root')?.value || '',
+      sourceRoot: document.getElementById(prefix + '-source')?.value || '',
+      active: document.getElementById(prefix + '-active')?.checked ?? true,
+      notes: document.getElementById(prefix + '-notes')?.value || '',
+    };
+  }
+  function toggleAddForm() {
+    const f = document.getElementById('add-form');
+    if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+  function saveNewProject() {
+    const p = getFormData('new');
+    if (!p.name) return;
+    vscode.postMessage({ command: 'saveProject', project: p, originalName: '' });
+  }
+  function editProject(i) {
+    document.getElementById('edit-form-' + i).style.display = 'block';
+  }
+  function cancelEdit(i) {
+    document.getElementById('edit-form-' + i).style.display = 'none';
+  }
+  function saveEditProject(i, originalName) {
+    const p = getFormData('edit-' + i);
+    if (!p.name) return;
+    vscode.postMessage({ command: 'saveProject', project: p, originalName: originalName });
+  }
+  function deleteProject(name) {
+    vscode.postMessage({ command: 'deleteProject', name: name });
+  }
 </script>
 </html>`;
   }
@@ -329,6 +462,150 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         ${fileItems}
       </div>
     </div>`;
+  }
+
+  private getHealthCheckHtml(results: HealthResult[]): string {
+    const summary = getHealthSummary(results);
+    const scoreColor = summary.score === 100 ? '#4caf50' : summary.score >= 80 ? '#ff9800' : '#e53935';
+
+    const rows = results.map((r) => {
+      const icon = r.status === 'ok' ? '<span class="health-ok">OK</span>'
+        : r.status === 'missing' ? '<span class="health-missing">MISSING</span>'
+        : '<span class="health-warning">WARN</span>';
+      return `<div class="health-row"><span class="health-item">${r.item}</span>${icon}</div>`;
+    }).join('');
+
+    return `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Health Check</span>
+      </div>
+      <div class="health-score" style="color:${scoreColor}">
+        <span class="score-number">${summary.score}%</span>
+        <span class="score-label">${summary.ok}/${summary.total} files present</span>
+      </div>
+      ${summary.missing > 0 ? `<div class="health-alert">${summary.missing} file${summary.missing > 1 ? 's' : ''} missing</div>` : ''}
+      <details class="health-details">
+        <summary class="health-toggle">View Details</summary>
+        <div class="health-list">${rows}</div>
+      </details>
+    </div>`;
+  }
+
+  private getProjectEditorHtml(projects: ProjectConfig[]): string {
+    if (projects.length === 0) {
+      return `
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Project Editor</span>
+        </div>
+        <p class="empty-state">No projects configured yet. Add your first project below.</p>
+        <button class="btn btn-secondary" onclick="toggleAddForm()">+ Add Project</button>
+        <div id="add-form" class="editor-form" style="display:none;">
+          ${this.getProjectFormHtml()}
+          <div class="form-actions">
+            <button class="btn btn-primary btn-small" onclick="saveNewProject()">Save</button>
+            <button class="btn btn-secondary btn-small" onclick="toggleAddForm()">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const projectCards = projects.map((p, i) => {
+      const escapedName = p.name.replace(/'/g, "\\'");
+      const activeClass = p.active ? 'status-active' : 'status-inactive';
+      const activeLabel = p.active ? 'Active' : 'On Hold';
+
+      return `
+        <div class="project-card" id="project-${i}">
+          <div class="project-header">
+            <span class="project-name">${p.name}</span>
+            <span class="project-status ${activeClass}">${activeLabel}</span>
+          </div>
+          <div class="project-meta">
+            <span class="project-mode">${p.mode}</span>
+          </div>
+          <div class="project-detail">
+            <span class="detail-label">Root:</span>
+            <span class="detail-value">${p.projectRoot}</span>
+          </div>
+          ${p.mode === 'Decentralized' ? `<div class="project-detail">
+            <span class="detail-label">Source:</span>
+            <span class="detail-value">${p.sourceRoot}</span>
+          </div>` : ''}
+          <div class="project-detail">
+            <span class="detail-label">Notes:</span>
+            <span class="detail-value">${p.notes}</span>
+          </div>
+          <div class="project-actions">
+            <button class="btn-link" onclick="editProject(${i})">Edit</button>
+            <button class="btn-link btn-danger" onclick="deleteProject('${escapedName}')">Remove</button>
+          </div>
+          <div id="edit-form-${i}" class="editor-form" style="display:none;">
+            ${this.getProjectFormHtml(p, i)}
+            <div class="form-actions">
+              <button class="btn btn-primary btn-small" onclick="saveEditProject(${i}, '${escapedName}')">Save</button>
+              <button class="btn btn-secondary btn-small" onclick="cancelEdit(${i})">Cancel</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="card-title">Project Editor</span>
+        <button class="btn-link" onclick="send('openProjectEnv')">View File</button>
+      </div>
+      ${projectCards}
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="toggleAddForm()">+ Add Project</button>
+      <div id="add-form" class="editor-form" style="display:none;">
+        ${this.getProjectFormHtml()}
+        <div class="form-actions">
+          <button class="btn btn-primary btn-small" onclick="saveNewProject()">Save</button>
+          <button class="btn btn-secondary btn-small" onclick="toggleAddForm()">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  private getProjectFormHtml(project?: ProjectConfig, index?: number): string {
+    const prefix = index !== undefined ? `edit-${index}` : 'new';
+    const name = project?.name || '';
+    const mode = project?.mode || 'Centralized';
+    const projectRoot = project?.projectRoot || '';
+    const sourceRoot = project?.sourceRoot || '';
+    const active = project?.active !== false;
+    const notes = project?.notes || '';
+
+    return `
+      <div class="form-group">
+        <label class="form-label">Project Name</label>
+        <input class="form-input" id="${prefix}-name" value="${name}" placeholder="MyProject" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mode</label>
+        <select class="form-input" id="${prefix}-mode">
+          <option value="Centralized" ${mode === 'Centralized' ? 'selected' : ''}>Centralized</option>
+          <option value="Decentralized" ${mode === 'Decentralized' ? 'selected' : ''}>Decentralized</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project Root</label>
+        <input class="form-input" id="${prefix}-root" value="${projectRoot}" placeholder="/path/to/project" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source Root</label>
+        <input class="form-input" id="${prefix}-source" value="${sourceRoot}" placeholder="/path/to/source" />
+      </div>
+      <div class="form-group form-row">
+        <label class="form-label">Active</label>
+        <input type="checkbox" id="${prefix}-active" ${active ? 'checked' : ''} />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <input class="form-input" id="${prefix}-notes" value="${notes}" placeholder="Project notes..." />
+      </div>`;
   }
 
   private getIcons(): Record<string, string> {
@@ -845,6 +1122,221 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         padding: 5px 12px;
         font-size: 11px;
         width: auto;
+      }
+
+      /* ===== Health Check ===== */
+      .health-score {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .score-number {
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .score-label {
+        font-size: 11px;
+        opacity: 0.6;
+      }
+
+      .health-alert {
+        font-size: 11px;
+        color: #e53935;
+        margin-bottom: 8px;
+      }
+
+      .health-details {
+        margin-top: 4px;
+      }
+
+      .health-toggle {
+        font-size: 11px;
+        cursor: pointer;
+        opacity: 0.6;
+        user-select: none;
+      }
+
+      .health-toggle:hover {
+        opacity: 1;
+      }
+
+      .health-list {
+        margin-top: 6px;
+      }
+
+      .health-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 0;
+        font-size: 11px;
+        border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.08));
+      }
+
+      .health-item {
+        opacity: 0.75;
+      }
+
+      .health-ok {
+        color: #4caf50;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .health-missing {
+        color: #e53935;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .health-warning {
+        color: #ff9800;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      /* ===== Project Editor ===== */
+      .project-card {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.1));
+      }
+
+      .project-card:last-of-type {
+        border-bottom: none;
+      }
+
+      .project-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+
+      .project-name {
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .project-status {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .status-active {
+        background: rgba(76, 175, 80, 0.15);
+        color: #4caf50;
+      }
+
+      .status-inactive {
+        background: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+      }
+
+      .project-meta {
+        margin-bottom: 6px;
+      }
+
+      .project-mode {
+        font-size: 11px;
+        opacity: 0.55;
+        font-style: italic;
+      }
+
+      .project-detail {
+        display: flex;
+        gap: 6px;
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .detail-label {
+        opacity: 0.5;
+        flex-shrink: 0;
+      }
+
+      .detail-value {
+        word-break: break-all;
+        opacity: 0.8;
+      }
+
+      .project-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .btn-danger {
+        color: #e53935 !important;
+      }
+
+      .btn-danger:hover {
+        background: rgba(229, 57, 53, 0.08) !important;
+      }
+
+      .editor-form {
+        margin-top: 10px;
+        padding: 10px;
+        background: var(--vscode-editor-background, rgba(255,255,255,0.02));
+        border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.15));
+        border-radius: 6px;
+      }
+
+      .form-group {
+        margin-bottom: 8px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        opacity: 0.65;
+        margin-bottom: 3px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 5px 8px;
+        font-size: 12px;
+        font-family: inherit;
+        background: var(--vscode-input-background, rgba(255,255,255,0.06));
+        color: var(--vscode-input-foreground, var(--vscode-foreground));
+        border: 1px solid var(--vscode-input-border, rgba(128,128,128,0.2));
+        border-radius: 4px;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      .form-input:focus {
+        border-color: var(--vscode-focusBorder, #E84B8A);
+      }
+
+      select.form-input {
+        cursor: pointer;
+      }
+
+      .form-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-direction: row;
+      }
+
+      .form-row .form-label {
+        margin-bottom: 0;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
       }
 
       /* ===== Utility ===== */

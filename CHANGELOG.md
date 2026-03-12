@@ -2,6 +2,15 @@
 
 All notable changes to the RoundTable Hub extension will be documented in this file.
 
+## [1.1.0] - 2026-03-12
+
+### Added
+- **Visual ProjectEnvironment Editor** (Pro) — Add, edit, and remove projects through a sidebar form UI instead of editing markdown manually
+- **Quick Session Open** (Free) — One-click button to create/open today's RoundTable session file
+- **Framework Health Check** (Pro) — Verify framework integrity with a score and detailed file-by-file status report
+
+---
+
 ## [1.0.2] - 2026-03-12
 
 ### Changed
