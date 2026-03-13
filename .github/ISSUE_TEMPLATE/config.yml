@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and Discussion
+    url: https://github.com/VarakornUnicornTech/roundtable-hub-vscode/discussions
+    about: Ask questions in GitHub Discussions instead of opening an issue.
+  - name: Security Vulnerability (Private)
+    url: https://github.com/VarakornUnicornTech/roundtable-hub-vscode/security/advisories/new
+    about: Report security vulnerabilities privately. DO NOT open a public issue.

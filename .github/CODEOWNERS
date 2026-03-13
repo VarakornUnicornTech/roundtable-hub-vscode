@@ -1,0 +1,23 @@
+# RoundTable Hub — Code Ownership
+# CODEOWNERS uses the LAST matching pattern.
+
+# Core extension source — Owner review required
+/src/                                   @VarakornUnicornTech
+/package.json                           @VarakornUnicornTech
+
+# Build and CI — Owner review required
+/.github/workflows/                     @VarakornUnicornTech
+/.github/CODEOWNERS                     @VarakornUnicornTech
+/esbuild.js                             @VarakornUnicornTech
+/tsconfig.json                          @VarakornUnicornTech
+
+# Governance — Owner review required
+/GOVERNANCE.md                          @VarakornUnicornTech
+/SECURITY.md                            @VarakornUnicornTech
+/LICENSE                                @VarakornUnicornTech
+
+# Documentation — open for community (maintainer reviews)
+/README.md                              @VarakornUnicornTech
+/CONTRIBUTING.md                        @VarakornUnicornTech
+/CHANGELOG.md                           @VarakornUnicornTech
+/docs/                                  @VarakornUnicornTech
