@@ -18,11 +18,13 @@ export interface TeamRoster {
 }
 
 /**
- * Scan .claude/Team Roster/ for team roster markdown files.
- * Parses the roster table and metadata from each file.
+ * Scan for team roster/agent markdown files.
+ * Supports both v1.3.0+ (.claude/agents/) and legacy (.claude/Team Roster/).
  */
 export function scanRosters(workspaceRoot: string): TeamRoster[] {
-  const rosterDir = path.join(workspaceRoot, '.claude', 'Team Roster');
+  const agentsDir = path.join(workspaceRoot, '.claude', 'agents');
+  const legacyDir = path.join(workspaceRoot, '.claude', 'Team Roster');
+  const rosterDir = fs.existsSync(agentsDir) ? agentsDir : legacyDir;
   if (!fs.existsSync(rosterDir)) { return []; }
 
   const files = fs.readdirSync(rosterDir)

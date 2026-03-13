@@ -10,11 +10,13 @@ export interface PolicyFile {
 }
 
 /**
- * Scan .claude/policies/ for policy markdown files.
- * Returns sorted list with title extracted from first heading.
+ * Scan for policy markdown files.
+ * Supports both v1.3.0+ (.claude/TeamDocument/1. Policies/) and legacy (.claude/policies/).
  */
 export function scanPolicies(workspaceRoot: string): PolicyFile[] {
-  const policyDir = path.join(workspaceRoot, '.claude', 'policies');
+  const newDir = path.join(workspaceRoot, '.claude', 'TeamDocument', '1. Policies');
+  const legacyDir = path.join(workspaceRoot, '.claude', 'policies');
+  const policyDir = fs.existsSync(newDir) ? newDir : legacyDir;
   if (!fs.existsSync(policyDir)) { return []; }
 
   const files = fs.readdirSync(policyDir)
