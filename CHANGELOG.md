@@ -2,6 +2,18 @@
 
 All notable changes to the RoundTable Hub extension will be documented in this file.
 
+## [1.2.2] - 2026-03-13
+
+### Fixed
+- **Roster Viewer** — now supports Framework v1.3.0 path (`.claude/agents/`) with fallback to legacy (`.claude/Team Roster/`)
+- **Policy Browser** — now supports Framework v1.3.0 path (`.claude/TeamDocument/1. Policies/`) with fallback to legacy (`.claude/policies/`)
+- **Health Check** — auto-detects Framework version and checks correct file paths and names for both v1.3.0+ and legacy
+
+### Changed
+- All 3 services use automatic path detection — fully backward compatible with older Framework versions
+
+---
+
 ## [1.2.1] - 2026-03-12
 
 ### Added
