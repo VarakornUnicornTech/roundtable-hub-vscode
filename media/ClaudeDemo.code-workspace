@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../../../Claude Code/ClaudeDemo"
+		},
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}
