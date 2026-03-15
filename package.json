@@ -2,7 +2,7 @@
   "name": "roundtable-hub",
   "displayName": "RoundTable Hub",
   "description": "Management hub for RoundTable Framework — one-click install, visual setup, version management",
-  "version": "1.2.2",
+  "version": "1.4.0",
   "publisher": "UnicornTech",
   "license": "MIT",
   "icon": "media/logo3_square.png",
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/VarakornUnicornTech/roundtable-hub-vscode"
   },
-  "homepage": "https://github.com/VarakornUnicornTech/unicorn_roundtable_framework_repo",
+  "homepage": "https://github.com/VarakornUnicornTech/roundtable-framework",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -68,6 +68,10 @@
       {
         "command": "roundtable.update",
         "title": "RoundTable: Update Framework"
+      },
+      {
+        "command": "roundtable.pushToHub",
+        "title": "RoundTable: Push to Hub"
       }
     ],
     "configuration": {
@@ -75,7 +79,7 @@
       "properties": {
         "roundtable.repoUrl": {
           "type": "string",
-          "default": "VarakornUnicornTech/unicorn_roundtable_framework_repo",
+          "default": "VarakornUnicornTech/roundtable-framework",
           "description": "GitHub repository for RoundTable Framework template"
         },
         "roundtable.licenseKey": {
@@ -87,6 +91,16 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically check for framework updates on startup"
+        },
+        "roundtable.hubApiPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Hub.Api project (e.g., D:/AI Projects/Projects/RoundTable-Hub/src/Hub.Api). Auto-detected if empty."
+        },
+        "roundtable.hubApiUrl": {
+          "type": "string",
+          "default": "http://localhost:5200",
+          "description": "URL of the running RoundTable Hub API server"
         }
       }
     }

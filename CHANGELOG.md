@@ -2,6 +2,29 @@
 
 All notable changes to the RoundTable Hub extension will be documented in this file.
 
+## [1.4.0] - 2026-03-15
+
+### Added
+- **Push to Hub button** — One-click sync workspace data (tickets, sessions, briefings) to RoundTable Hub database via API or CLI fallback
+- **`roundtable.hubApiUrl` setting** — Configure Hub API server URL (default: `http://localhost:5200`)
+- **`roundtable.hubApiPath` setting** — Configure Hub.Api project path for CLI fallback (auto-detected if empty)
+
+---
+
+## [1.3.0] - 2026-03-14
+
+### Changed
+- **All features are now FREE** — Pro/Trial gate removed entirely; all features unlocked for everyone (monetization revisited in 1 year)
+- **Setup Project button** — Now shows "N Projects Configured" when projects exist, instead of always showing "Setup Project"
+- **Update Framework → Update Preview** — Button renamed; now copies `/template preview` to clipboard and focuses Claude Code instead of opening a terminal
+- **FREE badge** replaces PRO/TRIAL badge in sidebar header
+- Removed Upgrade to Pro card, trial banner, and license key prompt from sidebar
+
+### Fixed
+- Framework version no longer shows "vunknown" — `template-version.json` is now reliably copied during installation from the framework repository
+
+---
+
 ## [1.2.2] - 2026-03-13
 
 ### Fixed

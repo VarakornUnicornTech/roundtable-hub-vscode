@@ -50,12 +50,12 @@ export class TemplateService {
 
     this.copyDirRecursive(sourceClaudeDir, this.claudeDir);
 
-    // Copy root files
+    // Copy root files (always overwrite to keep version current)
     const rootFiles = ['template-version.json'];
     for (const file of rootFiles) {
       const src = path.join(clonePath, file);
       const dest = path.join(this.claudeDir, file);
-      if (fs.existsSync(src) && !fs.existsSync(dest)) {
+      if (fs.existsSync(src)) {
         fs.copyFileSync(src, dest);
       }
     }

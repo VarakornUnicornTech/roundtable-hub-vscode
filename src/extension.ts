@@ -4,6 +4,7 @@ import { installFramework } from './commands/install';
 import { setupProject } from './commands/setup';
 import { checkForUpdates } from './commands/versionCheck';
 import { updateFramework } from './commands/update';
+import { pushToHub } from './commands/pushToHub';
 import { isAutoCheckEnabled } from './services/config';
 import { validateLicense, clearLicenseCache } from './services/license';
 import { initTrial } from './services/trial';
@@ -22,6 +23,43 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarProvider
     )
   );
+
+  // First-run Welcome experience
+  // Detect framework presence in current workspace
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const fs = require('fs');
+  const path = require('path');
+  const frameworkInstalled = workspaceRoot
+    ? fs.existsSync(path.join(workspaceRoot, '.claude', 'CLAUDE.md'))
+    : false;
+
+  const hasShownWelcome = context.globalState.get<boolean>('roundtable.welcomeShown');
+
+  // Show welcome if: first-ever activation OR framework not detected (covers reinstall edge case)
+  if (!hasShownWelcome || !frameworkInstalled) {
+    // Only update flag on genuine first run (not every time framework is missing)
+    if (!hasShownWelcome) {
+      context.globalState.update('roundtable.welcomeShown', true);
+    }
+
+    // Auto-reveal the sidebar panel
+    vscode.commands.executeCommand('roundtable-hub.sidebar.focus');
+
+    // Show Welcome notification when framework is not yet installed
+    if (!frameworkInstalled) {
+      vscode.window.showInformationMessage(
+        'RoundTable Hub is ready! Open the sidebar and click "Install RoundTable Framework" to get started.',
+        'Open Sidebar',
+        'Learn More'
+      ).then((selection) => {
+        if (selection === 'Open Sidebar') {
+          vscode.commands.executeCommand('roundtable-hub.sidebar.focus');
+        } else if (selection === 'Learn More') {
+          vscode.env.openExternal(vscode.Uri.parse('https://github.com/VarakornUnicornTech/roundtable-framework'));
+        }
+      });
+    }
+  }
 
   // Register commands
   context.subscriptions.push(
@@ -46,6 +84,13 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('roundtable.update', async () => {
       await updateFramework();
+      sidebarProvider.updateContent();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('roundtable.pushToHub', async () => {
+      await pushToHub();
       sidebarProvider.updateContent();
     })
   );
