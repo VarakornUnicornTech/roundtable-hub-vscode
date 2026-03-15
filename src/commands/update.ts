@@ -25,7 +25,7 @@ export async function updateFramework(): Promise<void> {
   const template = new TemplateService(workspaceRoot);
 
   if (!template.isInstalled()) {
-    vscode.window.showErrorMessage('RoundTable Framework is not installed.');
+    vscode.window.showErrorMessage('UniOpsQC Framework is not installed.');
     return;
   }
 
@@ -35,7 +35,7 @@ export async function updateFramework(): Promise<void> {
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
-      title: 'RoundTable Hub',
+      title: 'UniOpsQC Hub',
       cancellable: true,
     },
     async (progress, token) => {

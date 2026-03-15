@@ -13,7 +13,7 @@ export async function setupProject(): Promise<void> {
 
   if (!template.isInstalled()) {
     const answer = await vscode.window.showWarningMessage(
-      'RoundTable Framework is not installed. Install it first?',
+      'UniOpsQC Framework is not installed. Install it first?',
       'Install',
       'Cancel'
     );

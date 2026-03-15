@@ -19,7 +19,7 @@ export async function checkForUpdates(silent: boolean = false): Promise<void> {
   if (!template.isInstalled()) {
     if (!silent) {
       vscode.window.showInformationMessage(
-        'RoundTable Framework is not installed in this workspace.',
+        'UniOpsQC Framework is not installed in this workspace.',
         'Install Now'
       ).then((choice) => {
         if (choice === 'Install Now') {
@@ -50,7 +50,7 @@ export async function checkForUpdates(silent: boolean = false): Promise<void> {
 
       vscode.window
         .showInformationMessage(
-          `RoundTable v${remote.version} available! (current: v${localVersion})\n${changelogPreview}`,
+          `UniOpsQC v${remote.version} available! (current: v${localVersion})\n${changelogPreview}`,
           'Update Now',
           'View Changes',
           'Later'
@@ -64,7 +64,7 @@ export async function checkForUpdates(silent: boolean = false): Promise<void> {
         });
     } else if (!silent) {
       vscode.window.showInformationMessage(
-        `RoundTable Framework v${localVersion} is up to date.`
+        `UniOpsQC Framework v${localVersion} is up to date.`
       );
     }
   } catch (error: any) {
@@ -87,7 +87,7 @@ function extractVersionChanges(changelog: string, version: string): string {
 function showChangelog(changelog: string): void {
   const panel = vscode.window.createWebviewPanel(
     'roundtable-changelog',
-    'RoundTable Changelog',
+    'UniOpsQC Changelog',
     vscode.ViewColumn.One,
     {}
   );
@@ -103,7 +103,7 @@ function showChangelog(changelog: string): void {
   </style>
 </head>
 <body>
-  <h1>RoundTable Framework Changelog</h1>
+  <h1>UniOpsQC Framework Changelog</h1>
   <pre>${escapeHtml(changelog)}</pre>
 </body>
 </html>`;

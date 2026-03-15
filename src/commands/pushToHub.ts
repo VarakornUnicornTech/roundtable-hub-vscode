@@ -4,7 +4,7 @@ import * as cp from 'child_process';
 import * as http from 'http';
 
 /**
- * Push workspace data to RoundTable Hub database.
+ * Push workspace data to UniOpsQC Hub database.
  * Calls the Hub.Api HTTP endpoint (preferred) or falls back to CLI.
  */
 export async function pushToHub(): Promise<void> {
@@ -16,12 +16,12 @@ export async function pushToHub(): Promise<void> {
 
   const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
-  // Check that RoundTable Framework is installed
+  // Check that UniOpsQC Framework is installed
   const fs = require('fs');
   const claudeMd = path.join(workspaceRoot, '.claude', 'CLAUDE.md');
   if (!fs.existsSync(claudeMd)) {
     vscode.window.showWarningMessage(
-      'RoundTable Framework is not installed in this workspace.',
+      'UniOpsQC Framework is not installed in this workspace.',
       'Install Now'
     ).then((choice) => {
       if (choice === 'Install Now') {
@@ -243,7 +243,7 @@ function parseCliResult(output: string): ImportSummary {
  * Show full output in an output channel.
  */
 function showOutput(content: string): void {
-  const channel = vscode.window.createOutputChannel('RoundTable Hub');
+  const channel = vscode.window.createOutputChannel('UniOpsQC Hub');
   channel.clear();
   channel.appendLine(content);
   channel.show();

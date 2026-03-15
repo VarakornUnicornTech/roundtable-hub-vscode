@@ -10,7 +10,7 @@ import { validateLicense, clearLicenseCache } from './services/license';
 import { initTrial } from './services/trial';
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('RoundTable Hub activated');
+  console.log('UniOpsQC Hub activated');
 
   // Initialize 60-day free trial
   initTrial(context);
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Show Welcome notification when framework is not yet installed
     if (!frameworkInstalled) {
       vscode.window.showInformationMessage(
-        'RoundTable Hub is ready! Open the sidebar and click "Install RoundTable Framework" to get started.',
+        'UniOpsQC Hub is ready! Open the sidebar and click "Install UniOpsQC Framework" to get started.',
         'Open Sidebar',
         'Learn More'
       ).then((selection) => {
@@ -98,7 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Validate license on startup (async, non-blocking)
   validateLicense().then((status) => {
     if (status.valid) {
-      console.log('RoundTable Hub: Pro license validated');
+      console.log('UniOpsQC Hub: Pro license validated');
     }
     // Refresh sidebar to reflect validated status
     sidebarProvider.updateContent();
@@ -127,5 +127,5 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  console.log('RoundTable Hub deactivated');
+  console.log('UniOpsQC Hub deactivated');
 }

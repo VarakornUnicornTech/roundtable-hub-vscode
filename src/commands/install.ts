@@ -19,7 +19,7 @@ export async function installFramework(): Promise<void> {
 
   if (template.isInstalled()) {
     const answer = await vscode.window.showWarningMessage(
-      'RoundTable Framework is already installed in this workspace. Reinstall?',
+      'UniOpsQC Framework is already installed in this workspace. Reinstall?',
       'Reinstall',
       'Cancel'
     );
@@ -32,13 +32,13 @@ export async function installFramework(): Promise<void> {
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
-      title: 'RoundTable Hub',
+      title: 'UniOpsQC Hub',
       cancellable: false,
     },
     async (progress) => {
       try {
         // Step 1: Clone
-        progress.report({ message: 'Downloading RoundTable Framework...' });
+        progress.report({ message: 'Downloading UniOpsQC Framework...' });
         const tmpDir = path.join(os.tmpdir(), `roundtable-install-${Date.now()}`);
         await git.cloneShallow(github.getCloneUrl(), tmpDir);
 
@@ -64,7 +64,7 @@ export async function installFramework(): Promise<void> {
 
         vscode.window
           .showInformationMessage(
-            'RoundTable Framework installed successfully!',
+            'UniOpsQC Framework installed successfully!',
             'Getting Started',
             'Getting Started (ภาษาไทย)',
             'Setup Project'

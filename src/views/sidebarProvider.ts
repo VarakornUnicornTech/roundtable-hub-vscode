@@ -217,9 +217,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     <!-- Header -->
     <div class="header">
-      <img src="${logoUri}" alt="RoundTable Hub" class="logo" />
+      <img src="${logoUri}" alt="UniOpsQC Hub" class="logo" />
       <div class="header-text">
-        <h1 class="title">RoundTable Hub</h1>
+        <h1 class="title">UniOpsQC Hub</h1>
         <span class="subtitle">by Unicorn Tech Int Co.,Ltd.</span>
       </div>
     </div>
@@ -230,10 +230,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <div class="install-section">
       <div class="install-icon">${icons.desktopDownload}</div>
       <p class="install-heading">Get Started</p>
-      <p class="install-description">No RoundTable Framework detected in this workspace. Install it to enable multi-team AI governance.</p>
+      <p class="install-description">No UniOpsQC Framework detected in this workspace. Install it to enable multi-team AI governance.</p>
       <button class="btn btn-primary" onclick="send('install')">
         ${icons.desktopDownload}
-        <span>Install RoundTable Framework</span>
+        <span>Install UniOpsQC Framework</span>
       </button>
       <p class="hint">This will clone the framework and set up your .claude/ directory.</p>
     </div>
@@ -265,9 +265,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     <!-- Header -->
     <div class="header">
-      <img src="${logoUri}" alt="RoundTable Hub" class="logo" />
+      <img src="${logoUri}" alt="UniOpsQC Hub" class="logo" />
       <div class="header-text">
-        <h1 class="title">RoundTable Hub</h1>
+        <h1 class="title">UniOpsQC Hub</h1>
         <span class="subtitle">by Unicorn Tech Int Co.,Ltd.</span>
       </div>
       <span class="badge ${proSource === 'license' ? 'badge-pro' : proSource === 'trial' ? 'badge-trial' : 'badge-free'}">${proSource === 'license' ? 'PRO' : proSource === 'trial' ? 'TRIAL' : 'FREE'}</span>
